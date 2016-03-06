@@ -1,5 +1,5 @@
 /**
- *  Copyright 2012-2015 Gunnar Morling (http://www.gunnarmorling.de/)
+ *  Copyright 2012-2016 Gunnar Morling (http://www.gunnarmorling.de/)
  *  and/or other contributors as indicated by the @authors tag. See the
  *  copyright.txt file in the distribution for a full listing of all
  *  contributors.
@@ -23,23 +23,22 @@ package org.mapstruct.ap.test.abstractclass.generics;
  *
  */
 public class Target {
-    private ItemC itemC;
-    private ItemB itemB;
+    private AnimalKey animalKey;
+    private KeyOfAllBeings keyOfAllBeings;
 
-    public ItemC getItemC() {
-        return itemC;
+    public AnimalKey getAnimalKey() {
+        return animalKey;
     }
 
-    public void setItemC(ItemC itemC) {
-        this.itemC = itemC;
+    public void setAnimalKey(AnimalKey animalKey) {
+        this.animalKey = animalKey;
     }
 
-    public ItemB getItemB() {
-        return itemB;
+    public KeyOfAllBeings getKeyOfAllBeings() {
+        return keyOfAllBeings;
     }
 
-    public void setItemB(ItemB itemB) {
-        this.itemB = itemB;
+    public void setKeyOfAllBeings(KeyOfAllBeings keyOfAllBeings) {
+        this.keyOfAllBeings = keyOfAllBeings;
     }
-
 }

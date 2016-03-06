@@ -1,5 +1,5 @@
 /**
- *  Copyright 2012-2015 Gunnar Morling (http://www.gunnarmorling.de/)
+ *  Copyright 2012-2016 Gunnar Morling (http://www.gunnarmorling.de/)
  *  and/or other contributors as indicated by the @authors tag. See the
  *  copyright.txt file in the distribution for a full listing of all
  *  contributors.
@@ -18,21 +18,20 @@
  */
 package org.mapstruct.ap.internal.util;
 
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.Element;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
+
 import org.mapstruct.ap.internal.prism.CollectionMappingStrategyPrism;
 import org.mapstruct.ap.internal.prism.MapperConfigPrism;
 import org.mapstruct.ap.internal.prism.MapperPrism;
 import org.mapstruct.ap.internal.prism.MappingInheritanceStrategyPrism;
 import org.mapstruct.ap.internal.prism.NullValueMappingStrategyPrism;
-
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.Element;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Provides an aggregated view to the settings given via {@link org.mapstruct.Mapper} and
@@ -48,6 +47,7 @@ public class MapperConfiguration {
 
     private final MapperPrism mapperPrism;
     private final MapperConfigPrism mapperConfigPrism;
+    private final DeclaredType config;
 
     public static MapperConfiguration getInstanceOn(Element e) {
         return new MapperConfiguration( MapperPrism.getInstanceOn( e ) );
@@ -55,11 +55,15 @@ public class MapperConfiguration {
 
     private MapperConfiguration(MapperPrism mapperPrism) {
         this.mapperPrism = mapperPrism;
-        TypeMirror typeMirror = mapperPrism.config();
-        if ( typeMirror.getKind().equals( TypeKind.DECLARED ) ) {
-            this.mapperConfigPrism = MapperConfigPrism.getInstanceOn( ( (DeclaredType) typeMirror ).asElement() );
+
+        if ( mapperPrism.values.config() != null ) {
+            // TODO #737 Only a declared type makes sense here; Validate and raise graceful error;
+            // Also validate that @MapperConfig is present
+            this.config = (DeclaredType) mapperPrism.config();
+            this.mapperConfigPrism = MapperConfigPrism.getInstanceOn( config.asElement() );
         }
         else {
+            this.config = null;
             this.mapperConfigPrism = null;
         }
     }
@@ -82,12 +86,22 @@ public class MapperConfiguration {
         }
     }
 
-    public List<TypeMirror> uses() {
-        Set<TypeMirror> uses = new LinkedHashSet<TypeMirror>( mapperPrism.uses() );
-        if ( mapperConfigPrism != null ) {
-            uses.addAll( mapperConfigPrism.uses() );
+    public Set<DeclaredType> uses() {
+        Set<DeclaredType> uses = new LinkedHashSet<DeclaredType>();
+
+        for ( TypeMirror usedMapperType : mapperPrism.uses() ) {
+            // TODO #737 Only declared type make sense here; Validate and raise graceful error;
+            uses.add( (DeclaredType) usedMapperType );
         }
-        return new ArrayList<TypeMirror>( uses );
+
+        if ( mapperConfigPrism != null ) {
+            for ( TypeMirror usedMapperType : mapperConfigPrism.uses() ) {
+                // TODO #737 Only declared type make sense here; Validate and raise graceful error;
+                uses.add( (DeclaredType) usedMapperType );
+            }
+        }
+
+        return uses;
     }
 
     public List<TypeMirror> imports() {
@@ -154,8 +168,8 @@ public class MapperConfiguration {
         }
     }
 
-    public TypeMirror getMapperConfigMirror() {
-        return mapperPrism.config();
+    public DeclaredType config() {
+        return config;
     }
 
     public boolean isValid() {
